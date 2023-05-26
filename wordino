@@ -84,7 +84,7 @@ parser.add_argument('--add_wordlist_file', '-awf', type=str, help='add wordlist 
 parser.add_argument('--wordlist_id', '-wid', type=int, help='wordlist id')
 parser.add_argument('-vuln', action='store_true', help='did you exploit a vulnerability with it? :D')
 parser.add_argument('--reference','-ref', type=str, help='reference of this word')
-parser.add_argument('--update','-up', type=str, help='updating wordino cli')
+parser.add_argument('--update','-up', action='store_true', help='updating wordino cli')
 
 args = parser.parse_args()
 
