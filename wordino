@@ -164,7 +164,7 @@ elif args.add_wordlist_file and args.wordlist_id:
 		print('[+]' + r.json()["description"])
 
 elif args.update:
-	GITHUB_URL = "something random"
+	GITHUB_URL = "https://raw.githubusercontent.com/Khode4li/wordino-cli/master/wordino"
 	p = requests.get(GITHUB_URL).text
 	p_version = p[-6:][:-1]
 	if version == p_version:
