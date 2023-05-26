@@ -11,6 +11,42 @@ JWT_PATH = ""
 
 JWT_PATH = "/etc/.wordino-jwt"
 
+custom_help = '''
++------------------------+------------+---------------------------------------------+
+| command                | shortCut   | Description                                 |
++========================+============+=============================================+
+| --login                | -l         | Login with username and password            |
++------------------------+------------+---------------------------------------------+
+| --logout               | -lo        | Logout                                      |
++------------------------+------------+---------------------------------------------+
+| --show_groups          | -sg        | Show group list                             |
++------------------------+------------+---------------------------------------------+
+| --show_wordlists       | -sw        | Show wordlist list                          |
++------------------------+------------+---------------------------------------------+
+| --show_group_wordlists | -sgw       | Show group wordlists                        |
++------------------------+------------+---------------------------------------------+
+| --get_wordlist         | -gw        | gettig wordlist                             |
++------------------------+------------+---------------------------------------------+
+| --get_group            | -gg        | gettig group                                |
++------------------------+------------+---------------------------------------------+
+| --add_word             | -aw        | add single word                             |
++------------------------+------------+---------------------------------------------+
+| --add_wordlist_file    | -awf       | add wordlist file                           |
++------------------------+------------+---------------------------------------------+
+| --wordlist_id          | -wid       | wordlist id                                 |
++------------------------+------------+---------------------------------------------+
+| -vuln                  | -vuln      | did you exploit a vulnerability with it? :D |
++------------------------+------------+---------------------------------------------+
+| --reference            | -ref       | reference of this word                      |
++------------------------+------------+---------------------------------------------+
+| --update               | -up        | updating wordino cli                        |
++------------------------+------------+---------------------------------------------+
+'''
+
+class CustomArgumentParser(argparse.ArgumentParser):
+    def format_help(self):
+        return custom_help
+
 def file_put_contents(file_name,data):
 	f = open(file_name,'w')
 	f.write(data)
@@ -71,7 +107,7 @@ def getGroup(id):
 def addWord(data,wid):
 	return sendPostRequest(f'words/newWord/{wid}', data)
 
-parser = argparse.ArgumentParser(description='Wordino Cli')
+parser = CustomArgumentParser(description='Wordino Cli')
 
 parser.add_argument('--login', '-l', metavar='username:password', help='Login with username and password')
 parser.add_argument('--logout', '-lo', action='store_true', help='Logout')
