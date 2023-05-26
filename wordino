@@ -172,6 +172,6 @@ elif args.update:
 		exit()
 	print('[+] updating program...')
 	f = open(os.path.abspath(__file__), 'w')
-	f.write(p)
+	f.write(p.replace('HOST_URL',URL))
 	f.close()
 	print('[+] updated!')
