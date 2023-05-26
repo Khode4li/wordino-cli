@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-version="1.0.0"
+version="1.0.1"
 #test for checking update function
 import argparse
 import os
