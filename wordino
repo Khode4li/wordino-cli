@@ -1,0 +1,177 @@
+#!/usr/bin/python3
+version="1.0.0"
+import argparse
+import os
+import requests
+from tabulate import tabulate
+
+URL = "HOST_URL"
+
+JWT_PATH = ""
+
+JWT_PATH = "/etc/.wordino-jwt"
+
+def file_put_contents(file_name,data):
+	f = open(file_name,'w')
+	f.write(data)
+	f.close()
+
+def file_get_contents(file_name):
+	f = open(file_name, 'r')
+	content = f.read()
+	f.close()
+	return content
+
+def getJWT():
+	return file_get_contents(JWT_PATH)
+
+def logout():
+    file_put_contents(JWT_PATH, '')
+
+
+def sendPostRequest(api,data={},send_json=True):
+	if send_json:
+		return requests.post(URL+api, json=data, headers={'Authorization': 'Bearer ' + getJWT()})
+	return requests.post(URL+api, data=data, headers={'Authorization': 'Bearer ' + getJWT()})
+
+def sendGetRequest(api,data={}):
+	return requests.get(URL+api, params=data, headers={'Authorization': 'Bearer '+ getJWT()})
+
+def wordlistsList():
+	return sendGetRequest('wordlists/list')
+
+
+def isLoggedIn():
+	if os.path.exists(JWT_PATH) == False:
+		file_put_contents(JWT_PATH, '')
+		return False
+	if wordlistsList().status_code == 401:
+		return False
+	return True
+
+def login(username, password):
+	if isLoggedIn() == True:
+		return False
+	r = sendPostRequest('authors/login',{'username': username, 'password': password})
+	if r.status_code == 200:
+		jwt = r.json()["result"]["jwt-token"]
+		file_put_contents(JWT_PATH, jwt)
+		return True
+	return r
+
+def groupsList():
+	return sendGetRequest('groups/list')
+
+def getWordlist(id):
+	return sendGetRequest(f'wordlists/getWordlistFile/{id}')
+
+def getGroup(id):
+	return sendGetRequest(f'groups/getWordsFile/{id}')
+
+def addWord(data,wid):
+	return sendPostRequest(f'words/newWord/{wid}', data)
+
+parser = argparse.ArgumentParser(description='Wordino Cli')
+
+parser.add_argument('--login', '-l', metavar='username:password', help='Login with username and password')
+parser.add_argument('--logout', '-lo', action='store_true', help='Logout')
+parser.add_argument('--show_groups', '-sg', action='store_true', help='Show group list')
+parser.add_argument('--show_wordlists', '-sw' , action='store_true', help='Show wordlist list')
+parser.add_argument('--get_wordlist', '-gw', type=int, help='gettig wordlist')
+parser.add_argument('--get_group', '-gg', type=int, help='gettig group')
+parser.add_argument('--add_word', '-aw', type=str, help='add single word')
+parser.add_argument('--add_wordlist_file', '-awf', type=str, help='add wordlist file')
+parser.add_argument('--wordlist_id', '-wid', type=int, help='wordlist id')
+parser.add_argument('-vuln', action='store_true', help='did you exploit a vulnerability with it? :D')
+parser.add_argument('--reference','-ref', type=str, help='reference of this word')
+parser.add_argument('--update','-up', type=str, help='updating wordino cli')
+
+args = parser.parse_args()
+
+
+if args.login:
+	login_info = args.login.split(':')
+	if len(login_info) != 2:
+		print('[+] Invalid login information. Please provide username and password in the format username:password.')
+	else:
+		username, password = login_info
+		r = login(username, password)
+		if r == True:
+			print('[+] You have successfully logged in.')
+		elif r == False:
+			print('[+] You are already logged in. To log in to another account, first use the --logout command.')
+		else:
+			print('[+] ' + r.json()['description'])
+
+
+elif args.logout:
+	logout()
+	print('[+] You have successfully logged out.')
+
+
+elif args.show_groups:
+	r = groupsList()
+	print(tabulate(r.json()['result']['groups'], tablefmt='grid'))
+
+elif args.show_wordlists:
+	r = wordlistsList()
+	print(tabulate(r.json()['result'], tablefmt='grid'))
+
+elif args.get_wordlist:
+	r = getWordlist(args.get_wordlist)
+	print(r.text)
+
+elif args.get_group:
+	r = getGroup(args.get_group)
+	print(r.text)
+
+elif args.add_word and args.wordlist_id:
+	if args.vuln:
+		data = {'words':[{'word': args.add_word, 'vuln': True}]}
+	else:
+		data = {'words':[{'word': args.add_word, 'vuln': False}]}
+	if args.reference:
+		data['words'][0]['reference'] = args.reference
+
+	r = addWord(data,args.wordlist_id)
+	if r.status_code == 200:
+		print('[+] word successfully added!')
+	else:
+		print('[+]' + r.json()["description"])
+
+elif args.add_wordlist_file and args.wordlist_id:
+	file_address = args.add_wordlist_file
+	try:
+		f = open(file_address, 'r')
+		words = f.read()
+		f.close()
+	except FileNotFoundError:
+		print('[-] file not found!')
+	words = words.split("\n")
+	data = {'words': []}
+	for w in words:
+		tmp_dict = {}
+		tmp_dict['word'] = w
+		if args.reference:
+			tmp_dict['reference'] = args.reference
+		if args.vuln:
+			tmp_dict['vuln'] = args.vuln
+		data['words'].append(tmp_dict)
+	r = addWord(data, args.wordlist_id)
+	if r.status_code == 200:
+		print('[+] words successfully added!')
+	else:
+		print('[+]' + r.json()["description"])
+
+elif args.update:
+	GITHUB_URL = "something random"
+	p = requests.get(GITHUB_URL).text
+	p_version = p[-6:][:-1]
+	if version == p_version:
+		print('[+] your program is updated!')
+		exit()
+	print('[+] updating program...')
+	f = open(os.path.abspath(__file__), 'w')
+	f.write(p)
+	f.close()
+	print('[+] updated!')
