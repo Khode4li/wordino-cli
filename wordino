@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-version="1.0.0"
+version="1.0.1"
 import argparse
 import os
 import requests
@@ -77,6 +77,7 @@ parser.add_argument('--login', '-l', metavar='username:password', help='Login wi
 parser.add_argument('--logout', '-lo', action='store_true', help='Logout')
 parser.add_argument('--show_groups', '-sg', action='store_true', help='Show group list')
 parser.add_argument('--show_wordlists', '-sw' , action='store_true', help='Show wordlist list')
+parser.add_argument('--show_group_wordlists', '-sgw', type=int, help='Show group wordlists')
 parser.add_argument('--get_wordlist', '-gw', type=int, help='gettig wordlist')
 parser.add_argument('--get_group', '-gg', type=int, help='gettig group')
 parser.add_argument('--add_word', '-aw', type=str, help='add single word')
@@ -163,6 +164,10 @@ elif args.add_wordlist_file and args.wordlist_id:
 	else:
 		print('[+]' + r.json()["description"])
 
+elif args.show_group_wordlists:
+    r = sendGetRequest('groups/info/'+str(args.show_group_wordlists))
+    print(tabulate(r.json()['result']['wordlists'], tablefmt='grid'))
+		
 elif args.update:
 	GITHUB_URL = "https://raw.githubusercontent.com/Khode4li/wordino-cli/master/wordino"
 	p = requests.get(GITHUB_URL).text
